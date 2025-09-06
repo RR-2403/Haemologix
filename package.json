@@ -7,7 +7,7 @@
     "dev": "next dev --turbopack",
     "lint": "next lint",
     "start": "next start",
-    "postinstall": "prisma generate && pnpm approve-builds -y"
+    "postinstall": "prisma generate && pnpm approve-builds"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.9",
