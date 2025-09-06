@@ -4,4 +4,3 @@ onlyBuiltDependencies:
   - '@prisma/engines'
   - prisma
   - sharp
-  - '@tailwindcss/oxide'
