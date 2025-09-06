@@ -30,7 +30,8 @@ import {
 } from "@/lib/actions/user.actions";
 import { useRouter } from "next/navigation";
 import { submitDonorRegistration } from "@/lib/actions/donor.actions";
-
+import { sendDonorRegistrationEmail } from "@/lib/actions/mails.actions";
+import { sendDonorRegistrationSMS } from "@/lib/actions/sms.actions";
 
 const initialFormData: DonorData = {
   firstName: "",
@@ -247,6 +248,19 @@ export default function DonorRegistration() {
       console.error("Error submitting donor registration:", err);
     }
 
+    // Step 3: Send registration email
+    try {
+      await sendDonorRegistrationEmail(formData.email, formData.firstName);
+    } catch (err) {
+      console.error("Error sending registration email:", err);
+    }
+
+    //Step 4: Send registration SMS
+    try {
+      await sendDonorRegistrationSMS(formData.phone, formData.firstName);
+    } catch (err) {
+      console.error("Error sending registration SMS:", err);
+    }
 
     console.log("Form submitted:", formData);
     setIsSubmitted(true);

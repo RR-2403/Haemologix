@@ -38,7 +38,9 @@ import {
   markHospitalAsApplied,
 } from "@/lib/actions/user.actions";
 import { useRouter } from "next/navigation";
+import { sendHospitalConfirmationEmail } from "@/lib/actions/mails.actions";
 import { createHospital } from "@/lib/actions/hospital.actions";
+import { sendHospitalRegistrationSMS } from "@/lib/actions/sms.actions";
 
 const initialFormData: HospitalData = {
   bloodBankLicense: "",
@@ -330,7 +332,25 @@ export default function HospitalRegistration() {
       console.error("Error creating hospital:", err);
     }
 
-   
+    // Step 3: Send confirmation email
+    try {
+      await sendHospitalConfirmationEmail(
+        formData.contactEmail,
+        formData.hospitalName
+      );
+    } catch (err) {
+      console.error("Error sending confirmation email:", err);
+    }
+
+    // Step 4: Send registration SMS
+    try {
+      await sendHospitalRegistrationSMS(
+        formData.contactPhone,
+        formData.hospitalName
+      );
+    } catch (err) {
+      console.error("Error sending registration SMS:", err);
+    }
 
     console.log("Form submitted:", formData);
     setIsSubmitted(true);
