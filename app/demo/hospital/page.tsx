@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -49,15 +49,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UserButton, useUser } from "@clerk/nextjs";
-import {
-  createAlert,
-  getAlertResponseStats,
-  getAlerts,
-} from "@/lib/actions/alerts.actions";
-import { getCurrentUser } from "@/lib/actions/user.actions";
+import { UserButton } from "@clerk/nextjs";
 import { formatLastActivity } from "@/lib/utils";
-import Image from "next/image";
 
 type Donor = {
   id: number;
@@ -72,122 +65,14 @@ type Donor = {
 };
 
 export default function HospitalDashboard() {
+  const user = {
+    id: "151206",
+    name: "City General Hospital",
+    email: "mdalam4884@gmail.com",
+    role: "Hospital",
+  };
+
   const [showCreateAlert, setShowCreateAlert] = useState(false);
-  const [bloodTypeFilter, setBloodTypeFilter] = useState("all");
-
-  const [donorResponses, setDonorResponses] = useState<Donor[]>([
-    {
-      id: 1,
-      alertId: 1,
-      donorName: "Arjun Roy",
-      bloodType: "O+",
-      distance: "2.3 km",
-      phone: "+91-98300-12345",
-      status: "Confirmed",
-      eta: "30 minutes",
-      lastDonation: "3 months ago",
-    },
-    {
-      id: 2,
-      alertId: 1,
-      donorName: "Priya Sen",
-      bloodType: "A-",
-      distance: "1.8 km",
-      phone: "+91-98045-67890",
-      status: "Pending",
-      eta: "25 minutes",
-      lastDonation: "4 months ago",
-    },
-    {
-      id: 3,
-      alertId: 2,
-      donorName: "Ritwik Chatterjee",
-      bloodType: "O+",
-      distance: "5.8 km",
-      phone: "+91-98765-43210",
-      status: "Confirmed",
-      eta: "65 minutes",
-      lastDonation: "5 months ago",
-    },
-    {
-      id: 4,
-      alertId: 2,
-      donorName: "Sohini Dutta",
-      bloodType: "O+",
-      distance: "6.3 km",
-      phone: "+91-97481-55678",
-      status: "Pending",
-      eta: "70 minutes",
-      lastDonation: "6 months ago",
-    },
-    {
-      id: 5,
-      alertId: 3,
-      donorName: "Aniket Mukherjee",
-      bloodType: "O+",
-      distance: "5.0 km",
-      phone: "+91-98312-33445",
-      status: "Confirmed",
-      eta: "60 minutes",
-      lastDonation: "2 months ago",
-    },
-    {
-      id: 6,
-      alertId: 3,
-      donorName: "Moumita Ghosh",
-      bloodType: "A-",
-      distance: "6.8 km",
-      phone: "+91-99030-66789",
-      status: "Pending",
-      eta: "75 minutes",
-      lastDonation: "7 months ago",
-    },
-
-    {
-      id: 7,
-      alertId: 4,
-      donorName: "Sayan Banerjee",
-      bloodType: "A-",
-      distance: "3.4 km",
-      phone: "+91-89670-44556",
-      status: "Confirmed",
-      eta: "40 minutes",
-      lastDonation: "1 month ago",
-    },
-    {
-      id: 8,
-      alertId: 4,
-      donorName: "Debanjan Saha",
-      bloodType: "A-",
-      distance: "29 km",
-      phone: "+91-97480-11223",
-      status: "Pending",
-      eta: "95 minutes",
-      lastDonation: "8 months ago",
-    },
-    {
-      id: 9,
-      alertId: 5,
-      donorName: "Shreya Basu",
-      bloodType: "A-",
-      distance: "1.6 km",
-      phone: "+91-98311-88990",
-      status: "Confirmed",
-      eta: "22 minutes",
-      lastDonation: "6 months ago",
-    },
-    {
-      id: 10,
-      alertId: 5,
-      donorName: "Subhajit Paul",
-      bloodType: "A-",
-      distance: "23.0 km",
-      phone: "+91-99039-77441",
-      status: "Pending",
-      eta: "70 minutes",
-      lastDonation: "5 months ago",
-    },
-  ]);
 
   const [bloodInventory, setBloodInventory] = useState([
     { type: "A+", current: 15, minimum: 20 },
@@ -198,46 +83,16 @@ export default function HospitalDashboard() {
     { type: "AB-", current: 3, minimum: 5 },
     { type: "O+", current: 8, minimum: 25 },
     { type: "O-", current: 6, minimum: 15 },
+    { type: "Plasma", current: 30, minimum: 40 },
+    { type: "Platelets", current: 12, minimum: 20 },
   ]);
 
   const [isInvModalOpen, setIsInvModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-
+  const [bloodTypeFilter, setBloodTypeFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   type AlertWithType = Alerts & { type?: AlertType | string };
-
-  const [activeAlerts, setActiveAlerts] = useState<AlertWithType[]>([]);
-  // const [donorResponses, setDonorResponses] = useState<DonorUI[]>([]);
-  const [currentAlert, setCurrentAlert] = useState<AlertWithType | null>(null);
-
-  // useEffect(() => {
-  //   if (activeAlerts.length > 0 && !currentAlert) {
-  //     setCurrentAlert(activeAlerts[0]);
-  //   }
-  // }, [activeAlerts, currentAlert]);
-
-  // useEffect(() => {
-  //   async function fetchResponses() {
-  //     if (!currentAlert) return;
-
-  //     const stats = await getAlertResponseStats(currentAlert.id);
-  //     setDonorResponses(stats.donorResponses); // full list
-  //     setActiveAlerts((prev) =>
-  //       prev.map((alert) =>
-  //         alert.id === currentAlert.id
-  //           ? {
-  //               ...alert,
-  //               responses: stats.responses,
-  //               confirmed: stats.confirmed,
-  //             }
-  //           : alert
-  //       )
-  //     );
-  //   }
-  //   if (currentAlert?.id) fetchResponses();
-  // }, [currentAlert]);
-
-  // put this near the top of your component file (outside useEffect)
-  const mockPlasmaAlerts: AlertWithType[] = [
+  const [activeAlerts, setActiveAlerts] = useState<AlertWithType[]>([
     {
       id: "mock-plasma-1",
       type: "Plasma",
@@ -264,8 +119,216 @@ export default function HospitalDashboard() {
       responses: 0,
       confirmed: 0,
     },
-  ];
-
+    {
+      id: "mock-platelets-1",
+      type: "platelets",
+      bloodType: null,
+      urgency: "CRITICAL",
+      unitsNeeded: "3",
+      radius: "10",
+      description: "Urgent platelets required for surgery",
+      hospitalId: "mock-hospital",
+      createdAt: formatLastActivity(new Date(), false),
+      responses: 0,
+      confirmed: 0,
+    },
+    {
+      id: "mock-platelets-2",
+      type: "platelets",
+      bloodType: null,
+      urgency: "CRITICAL",
+      unitsNeeded: "2",
+      radius: "15",
+      description: "Urgent platelets needed for patient recovery",
+      hospitalId: "mock-hospital",
+      createdAt: formatLastActivity(new Date(), false),
+      responses: 0,
+      confirmed: 0,
+    },
+    {
+      id: "1",
+      bloodType: "O+",
+      urgency: "CRITICAL",
+      unitsNeeded: "3",
+      description:
+        "Emergency surgery patient needs immediate blood transfusion",
+      createdAt: "15 minutes ago",
+      hospitalId: "mock-hospital",
+      radius: "15",
+      responses: 12,
+      confirmed: 3,
+      status: "Active",
+    },
+    {
+      id: "2",
+      bloodType: "A-",
+      urgency: "HIGH",
+      unitsNeeded: "2",
+      hospitalId: "mock-hospital",
+      radius: "20",
+      description: "Accident victim requires blood for surgery",
+      createdAt: "1 hour ago",
+      responses: 8,
+      confirmed: 2,
+      status: "Active",
+    },
+  ]);
+  const [donorResponses, setDonorResponses] = useState<DonorUI[]>([
+    {
+      id: "1",
+      type: "Blood",
+      donorName: "Arjun Roy",
+      bloodType: "O+",
+      distance: "2.3 km",
+      phone: "+91-98300-12345",
+      status: "Confirmed",
+      eta: "30 minutes",
+      lastDonation: "3 months ago",
+    },
+    {
+      id: "2",
+      type: "Blood",
+      donorName: "Priya Sen",
+      bloodType: "A-",
+      distance: "1.8 km",
+      phone: "+91-98045-67890",
+      status: "Pending",
+      eta: "25 minutes",
+      lastDonation: "4 months ago",
+    },
+    {
+      id: "3",
+      type: "Blood",
+      donorName: "Ritwik Chatterjee",
+      bloodType: "B+",
+      distance: "5.8 km",
+      phone: "+91-98765-43210",
+      status: "Confirmed",
+      eta: "65 minutes",
+      lastDonation: "5 months ago",
+    },
+    {
+      id: "4",
+      donorName: "Sohini Dutta",
+      bloodType: "B-",
+      type: "Blood",
+      distance: "6.3 km",
+      phone: "+91-97481-55678",
+      status: "Pending",
+      eta: "70 minutes",
+      lastDonation: "6 months ago",
+    },
+    {
+      id: "5",
+      type: "Blood",
+      donorName: "Aniket Mukherjee",
+      bloodType: "AB+",
+      distance: "5.0 km",
+      phone: "+91-98312-33445",
+      status: "Confirmed",
+      eta: "60 minutes",
+      lastDonation: "2 months ago",
+    },
+    {
+      id: "6",
+      type: "Blood",
+      donorName: "Moumita Ghosh",
+      bloodType: "AB-",
+      distance: "6.8 km",
+      phone: "+91-99030-66789",
+      status: "Pending",
+      eta: "75 minutes",
+      lastDonation: "7 months ago",
+    },
+    {
+      id: "7",
+      donorName: "Sayan Banerjee",
+      bloodType: "A+",
+      type: "Blood",
+      distance: "3.4 km",
+      phone: "+91-89670-44556",
+      status: "Confirmed",
+      eta: "40 minutes",
+      lastDonation: "1 month ago",
+    },
+    {
+      id: "8",
+      type: "Blood",
+      donorName: "Debanjan Saha",
+      bloodType: "O-",
+      distance: "29 km",
+      phone: "+91-97480-11223",
+      status: "Pending",
+      eta: "95 minutes",
+      lastDonation: "8 months ago",
+    },
+    {
+      id: "9",
+      type: "Blood",
+      donorName: "Shreya Basu",
+      bloodType: "A-",
+      distance: "1.6 km",
+      phone: "+91-98311-88990",
+      status: "Confirmed",
+      eta: "22 minutes",
+      lastDonation: "6 months ago",
+    },
+    {
+      id: "10",
+      type: "Blood",
+      donorName: "Subhajit Paul",
+      bloodType: "B+",
+      distance: "23.0 km",
+      phone: "+91-99039-77441",
+      status: "Pending",
+      eta: "70 minutes",
+      lastDonation: "5 months ago",
+    },
+    {
+      id: "11",
+      type: "Plasma",
+      donorName: "Ananya Roy",
+      bloodType: "-",
+      distance: "12.0 km",
+      phone: "+91-98765-43210",
+      status: "Pending",
+      eta: "40 minutes",
+      lastDonation: "2 months ago",
+    },
+    {
+      id: "12",
+      type: "Plasma",
+      donorName: "Rahul Sharma",
+      bloodType: "-",
+      distance: "8.5 km",
+      phone: "+91-91234-56789",
+      status: "Confirmed",
+      eta: "30 minutes",
+      lastDonation: "1 month ago",
+    },
+    {
+      id: "13",
+      type: "Platelets",
+      donorName: "Priya Singh",
+      bloodType: "-",
+      distance: "15.0 km",
+      phone: "+91-99887-66554",
+      status: "Pending",
+      eta: "50 minutes",
+      lastDonation: "3 months ago",
+    },
+    {
+      id: "14",
+      type: "Platelets",
+      donorName: "Amit Verma",
+      bloodType: "-",
+      distance: "6.0 km",
+      phone: "+91-91122-33445",
+      status: "Confirmed",
+      eta: "25 minutes",
+      lastDonation: "2 weeks ago",
+    },
+  ]);
   const [newAlert, setNewAlert] = useState({
     type: "",
     bloodType: "",
@@ -274,57 +337,10 @@ export default function HospitalDashboard() {
     description: "",
     radius: "10",
   });
-  const router = useRouter();
-
-  const [dbUser, setDbUser] = useState<any>(null);
-
-  const [user, setUser] = useState<HospitalData | null>(null);
-
-  const { user: loggedInUser } = useUser();
-  const [hospitalID, setHospitalID] = useState("");
-  useEffect(() => {
-    const fetchUser = async () => {
-      const email = loggedInUser?.primaryEmailAddress?.emailAddress;
-      if (!email) return;
-
-      try {
-        const res = await getCurrentUser(email);
-        console.log("[Dashboard] server action response:", res);
-        setDbUser(res);
-      } catch (err) {
-        console.error("[Dashboard] error calling getCurrentUser:", err);
-      }
-    };
-
-    fetchUser();
-  }, [loggedInUser]);
-
-  useEffect(() => {
-    if (dbUser?.role === "HOSPITAL" && dbUser.user) {
-      console.log("[Dashboard] user is a hospital:", dbUser.user.id);
-      setHospitalID(dbUser.user.id);
-    }
-  }, [dbUser]);
-
-  useEffect(() => {
-    if (!hospitalID) return; // skip if hospitalID not set
-
-    const fetchAlerts = async () => {
-      try {
-        const res = await getAlerts(hospitalID);
-        setActiveAlerts([...mockPlasmaAlerts, ...res]);
-      } catch (err) {
-        console.error("Error loading alerts:", err);
-      }
-    };
-
-    fetchAlerts();
-  }, [hospitalID]);
 
   const handleCreateAlert = async () => {
     if (
       !newAlert.type ||
-      !newAlert.bloodType ||
       !newAlert.urgency ||
       !newAlert.unitsNeeded ||
       !newAlert.description
@@ -340,7 +356,7 @@ export default function HospitalDashboard() {
       unitsNeeded: newAlert.unitsNeeded,
       radius: newAlert.radius! as Radius,
       description: newAlert.description,
-      hospitalId: hospitalID,
+      hospitalId: "mock-hospital",
       createdAt: new Date().toLocaleString(),
       responses: 0,
       confirmed: 0,
@@ -384,6 +400,15 @@ export default function HospitalDashboard() {
     }
   };
 
+  function getStatus(
+    current: number,
+    minimum: number
+  ): "Good" | "Low" | "Critical" {
+    if (current < minimum * 0.4) return "Critical";
+    if (current < minimum * 0.75) return "Low";
+    return "Good";
+  }
+
   const criticalTypes = bloodInventory.filter(
     (item) => getStatus(item.current, item.minimum) === "Critical"
   ).length;
@@ -396,37 +421,21 @@ export default function HospitalDashboard() {
     (donor) => donor.status === "Confirmed"
   ).length;
 
-  // if (!user) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-screen text-white">
-  //       Loading...
-  //     </div>
-  //   );
-  // }
+  const handleUpdateInventory = () => {
+    setEditingItem(bloodInventory[0]); // default first one
+    setIsInvModalOpen(true);
+  };
 
-  const [justConfirmed, setJustConfirmed] = useState<number | null>(null);
+  const handleSave = () => {
+    if (!editingItem) return;
+    setBloodInventory((prev) =>
+      prev.map((b) => (b.type === editingItem.type ? editingItem : b))
+    );
+    setIsInvModalOpen(false);
+  };
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [distanceFilter, setDistanceFilter] = useState("all");
-
-  const filteredDonors = useMemo(() => {
-    return donorResponses.filter((donor) => {
-      const matchesName = donor.donorName
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-      const matchesDistance =
-        distanceFilter === "all" ||
-        parseFloat(donor.distance) <= parseFloat(distanceFilter);
-
-      const matchesBloodType =
-        bloodTypeFilter === "all" || donor.bloodType === bloodTypeFilter;
-
-      return matchesName && matchesDistance && matchesBloodType;
-    });
-  }, [donorResponses, searchTerm, distanceFilter, bloodTypeFilter]);
-
-  const handleConfirm = (donorID: number) => {
+  const [justConfirmed, setJustConfirmed] = useState<string | null>(null);
+  const handleConfirm = (donorID: string) => {
     // Call the API to confirm the donor's response
     // confirmDonorResponse(donorID)
     //   .then(() => {
@@ -442,27 +451,30 @@ export default function HospitalDashboard() {
     //   });
   };
 
-  const handleUpdateInventory = () => {
-    setEditingItem(bloodInventory[0]); // default first one
-    setIsInvModalOpen(true);
-  };
+  const [searchTerm, setSearchTerm] = useState("");
+  const [distanceFilter, setDistanceFilter] = useState("all");
 
-  function getStatus(
-    current: number,
-    minimum: number
-  ): "Good" | "Low" | "Critical" {
-    if (current < minimum * 0.4) return "Critical";
-    if (current < minimum * 0.75) return "Low";
-    return "Good";
-  }
+  const filteredDonors = useMemo(() => {
+    return donorResponses.filter((donor) => {
+      const matchesName = donor.donorName
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
-  const handleSave = () => {
-    if (!editingItem) return;
-    setBloodInventory((prev) =>
-      prev.map((b) => (b.type === editingItem.type ? editingItem : b))
-    );
-    setIsInvModalOpen(false);
-  };
+      const matchesDistance =
+        distanceFilter === "all" ||
+        parseFloat(donor.distance) <= parseFloat(distanceFilter);
+
+      const matchesType = typeFilter === "all" || donor.type === typeFilter;
+
+      const matchesBloodType =
+        donor.type !== "Blood" ||
+        typeFilter !== "Blood" ||
+        bloodTypeFilter === "all" ||
+        donor.bloodType === bloodTypeFilter;
+
+      return matchesName && matchesDistance && matchesType && matchesBloodType;
+    });
+  }, [donorResponses, searchTerm, distanceFilter, typeFilter, bloodTypeFilter]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-900 to-yellow-600 flex flex-col relative overflow-hidden">
@@ -477,20 +489,14 @@ export default function HospitalDashboard() {
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-red-800 rounded-full flex items-center justify-center">
                 <Link href={"/"}>
-                  <Image
-                                       src="/logo.png"
-                                       alt="Logo"
-                                       width={48}
-                                       height={48}
-                                       className="rounded-full"
-                                     />
+                  <Building className="w-6 h-6 text-white" />
                 </Link>
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">
                   Hospital Dashboard
                 </h1>
-                <p className="text-sm text-gray-200">{user?.hospitalName}</p>
+                <p className="text-sm text-gray-200">{user?.name}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -527,6 +533,7 @@ export default function HospitalDashboard() {
                         <SelectContent className="bg-gray-800 text-white border-gray-700">
                           <SelectItem value="Blood">Blood</SelectItem>
                           <SelectItem value="Plasma">Plasma</SelectItem>
+                          <SelectItem value="Platelets">Platelets</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -799,91 +806,116 @@ export default function HospitalDashboard() {
               })}
             </div>
           </TabsContent>
-          {isInvModalOpen && editingItem && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-              <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-                <h2 className="text-lg font-semibold mb-4">
-                  Update Blood Inventory
-                </h2>
 
-                {/* Blood Type Selector */}
-                <label className="block mb-2">Blood Type</label>
-                <select
-                  value={editingItem.type}
-                  onChange={(e) => {
-                    const selected = bloodInventory.find(
-                      (b) => b.type === e.target.value
-                    )!;
-                    setEditingItem(selected);
-                  }}
-                  className="w-full border rounded px-3 py-2 mb-4"
-                >
-                  {bloodInventory.map((b) => (
-                    <option key={b.type} value={b.type}>
-                      {b.type}
-                    </option>
-                  ))}
-                </select>
+          <Dialog open={isInvModalOpen} onOpenChange={setIsInvModalOpen}>
+            <DialogContent className="max-w-md bg-white/10 backdrop-blur-lg border border-white/20 text-white rounded-lg p-6">
+              <DialogHeader>
+                <DialogTitle className="text-white text-lg font-semibold">
+                  Update Inventory
+                </DialogTitle>
+                <DialogDescription className="text-gray-200">
+                  Adjust current units for the selected type
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                {/* Type Selector */}
+                <div className="space-y-2">
+                  <Label className="text-white">Type</Label>
+                  <Select
+                    value={editingItem?.type || ""}
+                    onValueChange={(value) => {
+                      const selected = bloodInventory.find(
+                        (b) => b.type === value
+                      )!;
+                      setEditingItem(selected);
+                    }}
+                  >
+                    <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 text-white border-gray-700">
+                      {bloodInventory.map((b) => (
+                        <SelectItem key={b.type} value={b.type}>
+                          {b.type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* Current Units */}
-                <label className="block mb-2">Current Units</label>
-                <input
-                  type="number"
-                  value={editingItem.current}
-                  onChange={(e) => {
-                    const newCurrent = Number(e.target.value);
-                    setEditingItem((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            current: newCurrent,
-                            status:
-                              newCurrent < prev.minimum * 0.4
-                                ? "Critical"
-                                : newCurrent < prev.minimum * 0.75
-                                ? "Low"
-                                : "Good",
-                          }
-                        : prev
-                    );
-                  }}
-                  className="w-full border rounded px-3 py-2 mb-4"
-                />
+                <div className="space-y-2">
+                  <Label className="text-white">Current Units</Label>
+                  <Input
+                    type="number"
+                    placeholder="Enter current units"
+                    value={editingItem?.current || ""}
+                    onChange={(e) => {
+                      const newCurrent = Number(e.target.value);
+                      setEditingItem((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              current: newCurrent,
+                              status:
+                                newCurrent < prev.minimum * 0.4
+                                  ? "Critical"
+                                  : newCurrent < prev.minimum * 0.75
+                                  ? "Low"
+                                  : "Good",
+                            }
+                          : prev
+                      );
+                    }}
+                    className="bg-white/5 border-white/20 text-white placeholder:text-gray-400"
+                  />
+                </div>
 
-                {/* Show computed Status (read-only) */}
-                <label className="block mb-2">Status</label>
-                <div
-                  className={`w-full border rounded px-3 py-2 mb-6 ${
-                    getStatus(editingItem.current, editingItem.minimum) ===
-                    "Critical"
-                      ? "text-red-600"
-                      : getStatus(editingItem.current, editingItem.minimum) ===
-                        "Low"
-                      ? "text-yellow-600"
-                      : "text-green-600"
-                  }`}
-                >
-                  {getStatus(editingItem.current, editingItem.minimum)}
+                {/* Status (read-only) */}
+                <div className="space-y-2">
+                  <Label className="text-white">Status</Label>
+                  <div
+                    className={`w-full border rounded px-3 py-2 ${
+                      getStatus(
+                        editingItem?.current || 0,
+                        editingItem?.minimum || 1
+                      ) === "Critical"
+                        ? "text-red-600"
+                        : getStatus(
+                            editingItem?.current || 0,
+                            editingItem?.minimum || 1
+                          ) === "Low"
+                        ? "text-yellow-600"
+                        : "text-green-600"
+                    }`}
+                  >
+                    {getStatus(
+                      editingItem?.current || 0,
+                      editingItem?.minimum || 1
+                    )}
+                  </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end gap-2">
+                <div className="flex gap-3">
                   <Button
                     variant="outline"
                     onClick={() => setIsInvModalOpen(false)}
+                    className="flex-1 border-white/20 hover:bg-white/20 text-slate-900"
                   >
                     Cancel
                   </Button>
                   <Button
-                    className="bg-green-600 hover:bg-green-700 text-white"
                     onClick={handleSave}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white transition-all duration-300 hover:shadow-lg hover:shadow-green-500/50"
                   >
                     Save
                   </Button>
                 </div>
               </div>
-            </div>
-          )}
+            </DialogContent>
+          </Dialog>
 
           {/* Active Alerts Tab */}
           <TabsContent value="alerts" className="space-y-6">
@@ -1018,6 +1050,7 @@ export default function HospitalDashboard() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white">Donor Responses</h2>
               <div className="flex gap-3">
+                {/* Search */}
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
@@ -1027,25 +1060,43 @@ export default function HospitalDashboard() {
                     className="pl-10 w-64 bg-white/5 border-white/20 text-white placeholder:text-gray-400 focus-visible:ring-yellow-600"
                   />
                 </div>
-                <Select
-                  value={bloodTypeFilter}
-                  onValueChange={setBloodTypeFilter}
-                >
+
+                {/* Type Filter */}
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-32 bg-white/5 border-white/20 text-white">
-                    <SelectValue placeholder="Blood Type" />
+                    <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 text-white border-gray-700">
                     <SelectItem value="all">All</SelectItem>
-                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
-                      (type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      )
-                    )}
+                    <SelectItem value="Blood">Blood</SelectItem>
+                    <SelectItem value="Plasma">Plasma</SelectItem>
+                    <SelectItem value="Platelets">Platelets</SelectItem>
                   </SelectContent>
                 </Select>
 
+                {/* Conditional Blood Type Filter */}
+                {typeFilter === "Blood" && (
+                  <Select
+                    value={bloodTypeFilter}
+                    onValueChange={setBloodTypeFilter}
+                  >
+                    <SelectTrigger className="w-32 bg-white/5 border-white/20 text-white">
+                      <SelectValue placeholder="Blood Type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 text-white border-gray-700">
+                      <SelectItem value="all">All</SelectItem>
+                      {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                        (type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {/* Distance Filter */}
                 <Select
                   value={distanceFilter}
                   onValueChange={setDistanceFilter}
@@ -1063,6 +1114,8 @@ export default function HospitalDashboard() {
                 </Select>
               </div>
             </div>
+
+            {/* Donors Table */}
             <Card className="bg-white/10 backdrop-blur-sm border border-white/20 text-white">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -1071,6 +1124,9 @@ export default function HospitalDashboard() {
                       <tr>
                         <th className="text-left p-4 font-medium text-white">
                           Donor
+                        </th>
+                        <th className="text-left p-4 font-medium text-white">
+                          Type
                         </th>
                         <th className="text-left p-4 font-medium text-white">
                           Blood Type
@@ -1108,14 +1164,24 @@ export default function HospitalDashboard() {
                               </p>
                             </div>
                           </td>
+
+                          {/* Type */}
                           <td className="p-4">
                             <Badge
                               variant="outline"
                               className="bg-white/5 border-white/20 text-white"
                             >
-                              {response.bloodType}
+                              {response.type}
                             </Badge>
                           </td>
+
+                          {/* Blood Type (only for Blood donors) */}
+                          <td className="p-4 text-gray-200">
+                            {response.type === "Blood"
+                              ? response.bloodType
+                              : "-"}
+                          </td>
+
                           <td className="p-4 text-gray-200">
                             {response.distance}
                           </td>
@@ -1183,6 +1249,7 @@ export default function HospitalDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
             <h2 className="text-2xl font-bold text-white">

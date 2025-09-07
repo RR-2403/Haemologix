@@ -18,6 +18,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import PasskeyModal from "@/components/PasskeyModal";
 import { stats, features, steps, CarouselData } from "@/constants";
 import { getCurrentUser } from "@/lib/actions/user.actions";
+import Image from "next/image";
 
 const HomePage = () => {
   const [activeFeature, setActiveFeature] = useState(0);
@@ -80,10 +81,16 @@ const HomePage = () => {
     <div className="min-h-screen bg-red-900">
       {/* Header */}
       <header className="backdrop-blur-lg sticky top-4 mx-4 md:mx-8 lg:mx-16 z-50 border border-yellow-600/40 rounded-2xl shadow-lg px-6 py-3 flex justify-between items-center bg-transparent">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-px rounded bg-transparent">
+        <div className="container mx-auto px-2 md:px-4 py-2 md:py-4 flex items-center justify-between gap-px rounded bg-transparent">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-300">
-              <Heart className="w-6 h-6 text-[rgba(127,29,29,1)]" />
+            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-slate-300">
+              <Image
+                src="/logo.png"
+                alt="Logo"
+                width={48}
+                height={48}
+                className="rounded-full"
+              />
             </div>
             <Link href={"/"} className="text-xl font-bold text-slate-300">
               {"HaemoLogix"}
@@ -97,10 +104,10 @@ const HomePage = () => {
               Features
             </Link>
             <Link
-              href="#how-it-works"
+              href="/impact"
               className="hover:text-yellow-600 transition-colors text-slate-300"
             >
-              How It Works
+              Impact
             </Link>
             <Link
               href="/contact"
@@ -634,7 +641,7 @@ const HomePage = () => {
               <div className="flex items-center gap-2 mb-4">
                 <Heart className="w-6 h-6 text-slate-300" />
                 <span className="text-xl font-bold text-slate-300">
-                  BloodConnect
+                  Haemologix
                 </span>
               </div>
               <p className="text-gray-400">
@@ -704,7 +711,7 @@ const HomePage = () => {
           </div>
           <div className="border-t border-slate-300 mt-8 pt-8 text-center text-gray-400">
             <p>
-              &copy; 2024 BloodConnect. All rights reserved. Built for saving
+              &copy; 2024 Haemologix. All rights reserved. Built for saving
               lives.
             </p>
           </div>
