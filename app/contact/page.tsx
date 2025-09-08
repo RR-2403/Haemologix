@@ -53,7 +53,7 @@ export default function ContactPage() {
                </div>
                <nav className="hidden md:flex items-center gap-6">
                  <Link
-                   href="#features"
+                   href="/#features"
                    className="hover:text-yellow-600 transition-colors text-slate-300"
                  >
                    Features

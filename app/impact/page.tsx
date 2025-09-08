@@ -35,10 +35,26 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 
 export default function ImpactAndProspects() {
   const [activeTab, setActiveTab] = useState("current-impact");
+
+  const TAB_ITEMS = [
+    { value: "current-impact", label: "Current Impact" },
+    { value: "social-transformation", label: "Social Impact" },
+    { value: "technology-roadmap", label: "Technology Roadmap" },
+    { value: "partnerships", label: "Partnerships" },
+    { value: "challenges", label: "Challenges & Solutions" },
+  ];
+
 
   const currentImpact = {
     livesSaved: 12456,
@@ -263,7 +279,7 @@ export default function ImpactAndProspects() {
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <Link
-              href="#features"
+              href="/#features"
               className="hover:text-yellow-600 transition-colors text-slate-300"
             >
               Features
@@ -326,39 +342,50 @@ export default function ImpactAndProspects() {
           onValueChange={setActiveTab}
           className="space-y-4"
         >
-          <TabsList className="grid w-full grid-cols-5 bg-white/10 backdrop-blur-sm border border-white/20">
-            <TabsTrigger
-              value="current-impact"
-              className="text-white data-[state=active]:bg-yellow-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
-            >
-              Current Impact
-            </TabsTrigger>
-            <TabsTrigger
-              value="social-transformation"
-              className="text-white data-[state=active]:bg-yellow-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
-            >
-              Social Impact
-            </TabsTrigger>
-            <TabsTrigger
-              value="technology-roadmap"
-              className="text-white data-[state=active]:bg-yellow-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
-            >
-              Technology Roadmap
-            </TabsTrigger>
-            <TabsTrigger
-              value="partnerships"
-              className="text-white data-[state=active]:bg-yellow-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
-            >
-              Partnerships
-            </TabsTrigger>
-            <TabsTrigger
-              value="challenges"
-              className="text-white data-[state=active]:bg-yellow-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
-            >
-              Challenges & Solutions
-            </TabsTrigger>
-          </TabsList>
+          {/* Mobile: dropdown */}
+          <div className="lg:hidden">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger
+                className="
+              w-full
+              bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg
+              text-white
+            "
+                aria-label="Select section"
+              >
+                <SelectValue placeholder="Select section" />
+              </SelectTrigger>
+              <SelectContent className="z-50">
+                {TAB_ITEMS.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
+          {/* Desktop: normal tabs */}
+          <TabsList
+            className="
+          hidden lg:grid lg:grid-cols-5 w-full
+          bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg
+        "
+          >
+            {TAB_ITEMS.map((t, i) => (
+              <TabsTrigger
+                key={t.value}
+                value={t.value}
+                className="
+              w-full text-center text-white transition-all duration-300
+              data-[state=active]:bg-yellow-600 data-[state=active]:text-white data-[state=active]:shadow-md
+              first:rounded-l-md last:rounded-r-md
+            "
+              >
+                {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
           {/* Current Impact Tab */}
           <TabsContent value="current-impact" className="space-y-8">
             <div className="text-center mt-10 mb-12">
@@ -886,7 +913,7 @@ export default function ImpactAndProspects() {
                           </Badge>
                         </div>
                         <p className="text-white mb-4">{item.description}</p>
-                        <div  className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                           <h4 className="font-medium text-green-800 mb-2">
                             Our Solution:
                           </h4>
