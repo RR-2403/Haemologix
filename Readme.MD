@@ -139,7 +139,10 @@ This project is licensed under the MIT License.
 
 (https://haemologix-geeks.vercel.app)
 
+
 ```
 Join HAEMOLOGIX-because minutes matter.
 
 ```
+
+> **Built within 36hrs hackathon in HackOdisha 5.0 organised by NIT ROURKELA**
