@@ -126,12 +126,9 @@ This project is licensed under the MIT License.
 
 ---
 
-## Authors
+## Author
 
-- Aftab Alam  → mdalam4884@gmail.com
-- Ayushi Mandal → ayushistacks@gmail.com
 - Rajdeep Roy → rajdeeproy2403@gmail.com
-- Team **GEEKS**
 
 ---
 
